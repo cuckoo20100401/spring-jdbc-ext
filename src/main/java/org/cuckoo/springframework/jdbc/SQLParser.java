@@ -1,56 +1,34 @@
 package org.cuckoo.springframework.jdbc;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import net.sf.jsqlparser.JSQLParserException;
+import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.parser.CCJSqlParserUtil;
 import net.sf.jsqlparser.statement.Statement;
-import net.sf.jsqlparser.statement.select.AllColumns;
 import net.sf.jsqlparser.statement.select.Join;
 import net.sf.jsqlparser.statement.select.OrderByElement;
 import net.sf.jsqlparser.statement.select.PlainSelect;
 import net.sf.jsqlparser.statement.select.Select;
-import net.sf.jsqlparser.statement.select.SelectExpressionItem;
 import net.sf.jsqlparser.statement.select.SelectItem;
-import net.sf.jsqlparser.statement.select.SelectItemVisitor;
-import net.sf.jsqlparser.statement.select.SelectItemVisitorAdapter;
-import net.sf.jsqlparser.statement.select.SelectVisitor;
-import net.sf.jsqlparser.statement.select.SelectVisitorAdapter;
-import net.sf.jsqlparser.statement.select.SetOperationList;
-import net.sf.jsqlparser.statement.select.WithItem;
-import net.sf.jsqlparser.util.SelectUtils;
 
 public class SQLParser {
 	
 	private String paginationSQL;
 	private String totalSQL;
 	
-	public void test1(String sql) throws JSQLParserException {
-		
-		Statement statement = CCJSqlParserUtil.parse(sql);
-		if (statement instanceof Select) {
-			Select selectStatement = (Select) statement;
-			PlainSelect plainSelect = (PlainSelect) selectStatement.getSelectBody();
-			
-			List<SelectItem> selectItems = new ArrayList<>();
-			plainSelect.setSelectItems(selectItems);
-			
-			SelectVisitor iii = new SelectVisitorAdapter();
-			SetOperationList aaa = new SetOperationList();
-			
-			selectStatement.getSelectBody().accept(iii);
-			
-		}
+	public SQLParser(String databaseProductName, String sql, int pageNum, int pageSize) throws JSQLParserException {
+		this.parse(databaseProductName, sql, pageNum, pageSize);
 	}
 
-	public void test(String sql) throws JSQLParserException {
+	@SuppressWarnings("unused")
+	private void parse(String databaseProductName, String sql, int pageNum, int pageSize) throws JSQLParserException {
 		
 		String srcSql = null;
 		String srcSqlSelectItems = null;
 		String srcSqlFromItem = null;
 		String srcSqlJoins = null;
-		String srcSqlWhere = null;
+		String srcSqlWhereExpression = null;
 		String srcSqlOrderBy = null;
 		
 		// parse
@@ -75,36 +53,63 @@ public class SQLParser {
 			srcSqlFromItem = plainSelect.getFromItem().toString();
 			//srcSqlJoins
 			List<Join> joins = plainSelect.getJoins();
-			for (Join join: joins) {
-				if (srcSqlJoins == null) {
-					srcSqlJoins = join.toString();
-				} else {
-					srcSqlJoins += " "+join.toString();
+			if (joins != null) {
+				for (Join join: joins) {
+					if (srcSqlJoins == null) {
+						srcSqlJoins = join.toString();
+					} else {
+						srcSqlJoins += " "+join.toString();
+					}
 				}
 			}
 			//srcSqlWhere
-			srcSqlWhere = plainSelect.getWhere().toString();
+			Expression expression = plainSelect.getWhere();
+			if (expression != null) {
+				srcSqlWhereExpression = expression.toString();
+			}
 			//srcSqlOrderBy
 			List<OrderByElement> orderByElements = plainSelect.getOrderByElements();
-			for (OrderByElement orderByElement: orderByElements) {
-				if (srcSqlOrderBy == null) {
-					srcSqlOrderBy = orderByElement.toString();
-				} else {
-					srcSqlOrderBy += ","+orderByElement.toString();
+			if (orderByElements != null) {
+				for (OrderByElement orderByElement: orderByElements) {
+					if (srcSqlOrderBy == null) {
+						srcSqlOrderBy = orderByElement.toString();
+					} else {
+						srcSqlOrderBy += ", "+orderByElement.toString();
+					}
 				}
 			}
-			//paging
-			//plainSelect.setLimit(limit);
+		} else {
+			throw new JSQLParserException("The SQL is not a SELECT statement: "+sql);
 		}
 		
-		// build
-		this.totalSQL = new StringBuilder()
-				.append("SELECT COUNT(*) FROM")
-				.append(srcSqlFromItem)
-				.append(srcSqlJoins)
-				.append(srcSqlWhere)
-				.append(srcSqlOrderBy)
-				.toString();
+		// build this.paginationSQL
+		if (databaseProductName.equals("PostgreSQL")) {
+			this.paginationSQL = srcSql + " LIMIT " + pageSize + " offset " + (pageNum-1)*pageSize;
+		} else if (databaseProductName.equals("MySQL")) {
+			this.paginationSQL = srcSql + " LIMIT " + (pageNum-1)*pageSize + "," + pageSize;
+		}
+		
+		// build this.totalSQL
+		StringBuilder totalSQLBuilder = new StringBuilder();
+		totalSQLBuilder.append("SELECT COUNT(*) FROM ").append(srcSqlFromItem);
+		if (srcSqlJoins != null) {
+			totalSQLBuilder.append(" ").append(srcSqlJoins);
+		}
+		if (srcSqlWhereExpression != null) {
+			totalSQLBuilder.append(" WHERE ").append(srcSqlWhereExpression);
+		}
+		/*if (srcSqlOrderBy != null) {
+			totalSQLBuilder.append(" ORDER BY ").append(srcSqlOrderBy);
+		}*/
+		this.totalSQL = totalSQLBuilder.toString();
+	}
+
+	public String getPaginationSQL() {
+		return paginationSQL;
+	}
+
+	public String getTotalSQL() {
+		return totalSQL;
 	}
 	
 }
