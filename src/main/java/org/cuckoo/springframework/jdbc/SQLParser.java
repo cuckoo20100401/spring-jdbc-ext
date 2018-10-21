@@ -87,6 +87,8 @@ public class SQLParser {
 			this.paginationSQL = srcSql + " LIMIT " + pageSize + " offset " + (pageNum-1)*pageSize;
 		} else if (databaseProductName.equals("MySQL")) {
 			this.paginationSQL = srcSql + " LIMIT " + (pageNum-1)*pageSize + "," + pageSize;
+		} else {
+			throw new JSQLParserException("This database is not supported: "+databaseProductName);
 		}
 		
 		// build this.totalSQL

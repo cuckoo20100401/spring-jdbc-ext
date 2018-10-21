@@ -45,6 +45,9 @@ public class ExtJdbcTemplate extends JdbcTemplate {
 		
 		SQLParser sqlParser = new SQLParser(databaseProductName, sql, pageNum, pageSize);
 		
+		log.debug("PaginationSQL: "+sqlParser.getPaginationSQL());
+		log.debug("TotalSQL: "+sqlParser.getTotalSQL());
+		
 		List<T> list = super.queryForList(sqlParser.getPaginationSQL(), args, elementType);
 		long total = super.queryForObject(sqlParser.getTotalSQL(), args, Long.class);
 		
