@@ -14,6 +14,7 @@ import org.cuckoo.springframework.jdbc.PageInfo;
 import org.cuckoo.springframework.jdbc.SQLParser;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
 
 import net.sf.jsqlparser.JSQLParserException;
 
@@ -23,9 +24,22 @@ public class ExtJdbcTemplate extends JdbcTemplate {
 	
 	private String databaseProductName;
 	
-	public ExtJdbcTemplate(DataSource dataSource) throws SQLException {
+	public ExtJdbcTemplate(DataSource dataSource) {
 		super(dataSource);
 		this.databaseProductName = this.getDatabaseProductName();
+	}
+	
+	public <T> PageInfo<T> query(String sql, Object[] args, RowMapper<T> rowMapper, int pageNum, int pageSize) throws DataAccessException, JSQLParserException {
+		
+		SQLParser sqlParser = new SQLParser(databaseProductName, sql, pageNum, pageSize);
+		
+		log.debug("PaginationSQL: "+sqlParser.getPaginationSQL());
+		log.debug("TotalSQL: "+sqlParser.getTotalSQL());
+		
+		List<T> list = super.query(sqlParser.getPaginationSQL(), args, rowMapper);
+		long total = super.queryForObject(sqlParser.getTotalSQL(), args, Long.class);
+		
+		return new PageInfo<>(pageNum, pageSize, list, total);
 	}
 	
 	public PageInfo<Map<String, Object>> queryForList(String sql, Object[] args, int pageNum, int pageSize) throws DataAccessException, JSQLParserException {
@@ -54,11 +68,16 @@ public class ExtJdbcTemplate extends JdbcTemplate {
 		return new PageInfo<>(pageNum, pageSize, list, total);
 	}
 
-	public String getDatabaseProductName() throws SQLException {
-		Connection conn = this.getDataSource().getConnection();
-		DatabaseMetaData databaseMetaData = conn.getMetaData();
-		String databaseProductName = databaseMetaData.getDatabaseProductName();
-		conn.close();
+	public String getDatabaseProductName() {
+		String databaseProductName = null;
+		try {
+			Connection conn = this.getDataSource().getConnection();
+			DatabaseMetaData databaseMetaData = conn.getMetaData();
+			databaseProductName = databaseMetaData.getDatabaseProductName();
+			conn.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
 		return databaseProductName;
 	}
 }
