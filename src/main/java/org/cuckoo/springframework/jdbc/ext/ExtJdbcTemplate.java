@@ -3,6 +3,7 @@ package org.cuckoo.springframework.jdbc.ext;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -10,6 +11,7 @@ import javax.sql.DataSource;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.cuckoo.springframework.jdbc.EntityPersistHelper;
 import org.cuckoo.springframework.jdbc.PageInfo;
 import org.cuckoo.springframework.jdbc.SQLParser;
 import org.springframework.dao.DataAccessException;
@@ -29,7 +31,27 @@ public class ExtJdbcTemplate extends JdbcTemplate {
 		this.databaseProductName = this.getDatabaseProductName();
 	}
 	
-	public <T> PageInfo<T> query(String sql, Object[] args, RowMapper<T> rowMapper, int pageNum, int pageSize) throws DataAccessException, JSQLParserException {
+	public <T> int save(EntityPersistHelper<T> entityPersistHelper) {
+		
+		String sql = entityPersistHelper.getInsertSQL();
+		Object[] args = entityPersistHelper.getInsertArgs();
+		
+		log.debug("SQL[args]: "+sql+" --"+Arrays.asList(args));
+		
+    	return super.update(sql, args);
+    }
+    
+    public <T> int update(EntityPersistHelper<T> entityPersistHelper) {
+    	
+    	String sql = entityPersistHelper.getUpdateSQL();
+		Object[] args = entityPersistHelper.getUpdateArgs();
+		
+		log.debug("SQL[args]: "+sql+" --"+Arrays.asList(args));
+		
+		return super.update(sql, args);
+    }
+	
+	public <T> PageInfo<T> find(String sql, Object[] args, int pageNum, int pageSize, RowMapper<T> rowMapper) throws DataAccessException, JSQLParserException {
 		
 		SQLParser sqlParser = new SQLParser(databaseProductName, sql, pageNum, pageSize);
 		
@@ -42,7 +64,7 @@ public class ExtJdbcTemplate extends JdbcTemplate {
 		return new PageInfo<>(pageNum, pageSize, list, total);
 	}
 	
-	public PageInfo<Map<String, Object>> queryForList(String sql, Object[] args, int pageNum, int pageSize) throws DataAccessException, JSQLParserException {
+	public PageInfo<Map<String, Object>> find(String sql, Object[] args, int pageNum, int pageSize) throws DataAccessException, JSQLParserException {
 		
 		SQLParser sqlParser = new SQLParser(databaseProductName, sql, pageNum, pageSize);
 		
@@ -50,19 +72,6 @@ public class ExtJdbcTemplate extends JdbcTemplate {
 		log.debug("TotalSQL: "+sqlParser.getTotalSQL());
 		
 		List<Map<String, Object>> list = super.queryForList(sqlParser.getPaginationSQL(), args);
-		long total = super.queryForObject(sqlParser.getTotalSQL(), args, Long.class);
-		
-		return new PageInfo<>(pageNum, pageSize, list, total);
-	}
-
-	public <T> PageInfo<T> queryForList(String sql, Object[] args, Class<T> elementType, int pageNum, int pageSize) throws DataAccessException, JSQLParserException {
-		
-		SQLParser sqlParser = new SQLParser(databaseProductName, sql, pageNum, pageSize);
-		
-		log.debug("PaginationSQL: "+sqlParser.getPaginationSQL());
-		log.debug("TotalSQL: "+sqlParser.getTotalSQL());
-		
-		List<T> list = super.queryForList(sqlParser.getPaginationSQL(), args, elementType);
 		long total = super.queryForObject(sqlParser.getTotalSQL(), args, Long.class);
 		
 		return new PageInfo<>(pageNum, pageSize, list, total);
