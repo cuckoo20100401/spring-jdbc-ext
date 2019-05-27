@@ -51,9 +51,16 @@ public class ExtJdbcTemplate extends JdbcTemplate {
 		return super.update(sql, args);
     }
 	
-	public <T> PageInfo<T> find(String sql, Object[] args, int pageNum, int pageSize, RowMapper<T> rowMapper) throws DataAccessException, JSQLParserException {
+	public <T> PageInfo<T> find(String sql, Object[] args, int pageNum, int pageSize, RowMapper<T> rowMapper) {
 		
-		SQLParser sqlParser = new SQLParser(databaseProductName, sql, pageNum, pageSize);
+		SQLParser sqlParser = null;
+		try {
+			sqlParser = new SQLParser(databaseProductName, sql, pageNum, pageSize);
+		} catch (JSQLParserException e) {
+			throw new DataAccessException(sql, e) {
+				private static final long serialVersionUID = 729049149151878652L;
+			};
+		}
 		
 		log.debug("PaginationSQL: "+sqlParser.getPaginationSQL());
 		log.debug("TotalSQL: "+sqlParser.getTotalSQL());
@@ -64,9 +71,16 @@ public class ExtJdbcTemplate extends JdbcTemplate {
 		return new PageInfo<>(pageNum, pageSize, list, total);
 	}
 	
-	public PageInfo<Map<String, Object>> find(String sql, Object[] args, int pageNum, int pageSize) throws DataAccessException, JSQLParserException {
+	public PageInfo<Map<String, Object>> find(String sql, Object[] args, int pageNum, int pageSize) {
 		
-		SQLParser sqlParser = new SQLParser(databaseProductName, sql, pageNum, pageSize);
+		SQLParser sqlParser = null;
+		try {
+			sqlParser = new SQLParser(databaseProductName, sql, pageNum, pageSize);
+		} catch (JSQLParserException e) {
+			throw new DataAccessException(sql, e) {
+				private static final long serialVersionUID = 729049149151878653L;
+			};
+		}
 		
 		log.debug("PaginationSQL: "+sqlParser.getPaginationSQL());
 		log.debug("TotalSQL: "+sqlParser.getTotalSQL());
