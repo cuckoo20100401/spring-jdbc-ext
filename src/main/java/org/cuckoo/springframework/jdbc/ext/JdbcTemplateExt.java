@@ -20,13 +20,13 @@ import org.springframework.jdbc.core.RowMapper;
 
 import net.sf.jsqlparser.JSQLParserException;
 
-public class ExtJdbcTemplate extends JdbcTemplate {
+public class JdbcTemplateExt extends JdbcTemplate {
 	
-	private static final Log log = LogFactory.getLog(ExtJdbcTemplate.class);
+	private static final Log log = LogFactory.getLog(JdbcTemplateExt.class);
 	
 	private String databaseProductName;
 	
-	public ExtJdbcTemplate(DataSource dataSource) {
+	public JdbcTemplateExt(DataSource dataSource) {
 		super(dataSource);
 		this.databaseProductName = this.getDatabaseProductName();
 	}

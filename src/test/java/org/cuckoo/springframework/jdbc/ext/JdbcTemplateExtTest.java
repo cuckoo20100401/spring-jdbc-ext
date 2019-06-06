@@ -14,7 +14,7 @@ import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.RowMapper;
 
-public class ExtJdbcTemplateTest {
+public class JdbcTemplateExtTest {
 
 	public static void main(String[] args) {
 		//save();
@@ -32,7 +32,7 @@ public class ExtJdbcTemplateTest {
 		entity.setCreateDate(LocalDate.now());
 		entity.setCreateTime(LocalDateTime.now());
 		entity.setPrice(new BigDecimal("99999999.315"));
-		int affected = DBUtils.getExtJdbcTemplate().save(EntityPersistHelper.build(entity));
+		int affected = DBUtils.getJdbcTemplateExt().save(EntityPersistHelper.build(entity));
 		System.out.println("affected: "+affected);
 	}
 	
@@ -41,14 +41,14 @@ public class ExtJdbcTemplateTest {
 		if (dbEntity != null) {
 			dbEntity.setAge(35);
 			dbEntity.setPrice(new BigDecimal("99999999.315"));
-			int affected = DBUtils.getExtJdbcTemplate().update(EntityPersistHelper.build(dbEntity));
+			int affected = DBUtils.getJdbcTemplateExt().update(EntityPersistHelper.build(dbEntity));
 			System.out.println("affected: "+affected);
 		}
 	}
 	
 	public static void find1() {
 		String sql = "SELECT * FROM sys_user";
-		PageInfo<SysUser> pageInfo = DBUtils.getExtJdbcTemplate().find(sql, null, 1, 20, BeanPropertyRowMapper.newInstance(SysUser.class));
+		PageInfo<SysUser> pageInfo = DBUtils.getJdbcTemplateExt().find(sql, null, 1, 20, BeanPropertyRowMapper.newInstance(SysUser.class));
 		pageInfo.getList().forEach(sysUser -> {
 			System.out.println(sysUser.getId()+"\t"+sysUser.getNickname()+"\t"+sysUser.getAge()+"\t"+sysUser.getCreateDate()+"\t"+sysUser.getPrice());
 		});
@@ -56,7 +56,7 @@ public class ExtJdbcTemplateTest {
 	
 	public static void find2() {
 		String sql = "SELECT * FROM sys_user";
-		PageInfo<SysUser> pageInfo = DBUtils.getExtJdbcTemplate().find(sql, null, 1, 20, new RowMapper<SysUser>() {
+		PageInfo<SysUser> pageInfo = DBUtils.getJdbcTemplateExt().find(sql, null, 1, 20, new RowMapper<SysUser>() {
 			@Override
 			public SysUser mapRow(ResultSet rs, int rowNum) throws SQLException {
 				SysUser entity = new SysUser();
@@ -76,7 +76,7 @@ public class ExtJdbcTemplateTest {
 	
 	public static void find3() {
 		String sql = "SELECT * FROM sys_user";
-		PageInfo<Map<String, Object>> pageInfo = DBUtils.getExtJdbcTemplate().find(sql, null, 1, 20);
+		PageInfo<Map<String, Object>> pageInfo = DBUtils.getJdbcTemplateExt().find(sql, null, 1, 20);
 		pageInfo.getList().forEach(row -> {
 			System.out.println(row.get("id")+"\t"+row.get("nickname")+"\t"+row.get("age")+"\t"+row.get("create_date")+"\t"+row.get("create_time")+"\t"+row.get("price"));
 		});
@@ -85,7 +85,7 @@ public class ExtJdbcTemplateTest {
 	public static SysUser findById(String id) {
 		try {
 			String sql = "SELECT * FROM sys_user WHERE id = ?";
-			SysUser dbEntity = DBUtils.getExtJdbcTemplate().queryForObject(sql, BeanPropertyRowMapper.newInstance(SysUser.class), id);
+			SysUser dbEntity = DBUtils.getJdbcTemplateExt().queryForObject(sql, BeanPropertyRowMapper.newInstance(SysUser.class), id);
 			return dbEntity;
 		} catch (EmptyResultDataAccessException e) {
 			return null;

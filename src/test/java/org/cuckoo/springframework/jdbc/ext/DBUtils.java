@@ -4,7 +4,7 @@ import org.springframework.jdbc.datasource.DriverManagerDataSource;
 
 public class DBUtils {
 
-	public static ExtJdbcTemplate getExtJdbcTemplate() {
+	public static JdbcTemplateExt getJdbcTemplateExt() {
 		
 		DriverManagerDataSource dataSource = new DriverManagerDataSource();
 		dataSource.setDriverClassName("org.postgresql.Driver");
@@ -12,7 +12,7 @@ public class DBUtils {
 		dataSource.setUsername("postgres");
 		dataSource.setPassword("postgres");
 		
-		ExtJdbcTemplate extJdbcTemplate = new ExtJdbcTemplate(dataSource);
+		JdbcTemplateExt extJdbcTemplate = new JdbcTemplateExt(dataSource);
 		return extJdbcTemplate;
 	}
 }
