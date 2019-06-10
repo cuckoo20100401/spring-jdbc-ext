@@ -3,14 +3,11 @@ package org.cuckoo.springframework.jdbc.ext;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
 import javax.sql.DataSource;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.cuckoo.springframework.jdbc.EntityPersistHelper;
 import org.cuckoo.springframework.jdbc.PageInfo;
 import org.cuckoo.springframework.jdbc.SQLParser;
@@ -22,8 +19,6 @@ import net.sf.jsqlparser.JSQLParserException;
 
 public class JdbcTemplateExt extends JdbcTemplate {
 	
-	private static final Log log = LogFactory.getLog(JdbcTemplateExt.class);
-	
 	private String databaseProductName;
 	
 	public JdbcTemplateExt(DataSource dataSource) {
@@ -32,22 +27,14 @@ public class JdbcTemplateExt extends JdbcTemplate {
 	}
 	
 	public <T> int save(EntityPersistHelper<T> entityPersistHelper) {
-		
 		String sql = entityPersistHelper.getInsertSQL();
 		Object[] args = entityPersistHelper.getInsertArgs();
-		
-		log.debug("SQL[args]: "+sql+" --"+Arrays.asList(args));
-		
     	return super.update(sql, args);
     }
     
     public <T> int update(EntityPersistHelper<T> entityPersistHelper) {
-    	
     	String sql = entityPersistHelper.getUpdateSQL();
 		Object[] args = entityPersistHelper.getUpdateArgs();
-		
-		log.debug("SQL[args]: "+sql+" --"+Arrays.asList(args));
-		
 		return super.update(sql, args);
     }
 	
@@ -61,9 +48,6 @@ public class JdbcTemplateExt extends JdbcTemplate {
 				private static final long serialVersionUID = 729049149151878652L;
 			};
 		}
-		
-		log.debug("PaginationSQL: "+sqlParser.getPaginationSQL());
-		log.debug("TotalSQL: "+sqlParser.getTotalSQL());
 		
 		List<T> list = super.query(sqlParser.getPaginationSQL(), args, rowMapper);
 		long total = super.queryForObject(sqlParser.getTotalSQL(), args, Long.class);
@@ -81,9 +65,6 @@ public class JdbcTemplateExt extends JdbcTemplate {
 				private static final long serialVersionUID = 729049149151878653L;
 			};
 		}
-		
-		log.debug("PaginationSQL: "+sqlParser.getPaginationSQL());
-		log.debug("TotalSQL: "+sqlParser.getTotalSQL());
 		
 		List<Map<String, Object>> list = super.queryForList(sqlParser.getPaginationSQL(), args);
 		long total = super.queryForObject(sqlParser.getTotalSQL(), args, Long.class);
