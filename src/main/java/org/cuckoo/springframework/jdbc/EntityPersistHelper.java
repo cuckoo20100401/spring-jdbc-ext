@@ -4,7 +4,7 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.cuckoo.universal.utils.db.StringUtils;
+import org.cuckoo.universal.utils.db.EntityTableTransformUtils;
 
 public class EntityPersistHelper<T> {
 	
@@ -33,15 +33,15 @@ public class EntityPersistHelper<T> {
 		Field[] fields = clazz.getDeclaredFields();
     	for (Field field: fields) {
     		if (field.getType().getModifiers() == 17 || (field.getType().getModifiers() == 1 && field.getType().getName().equals("java.math.BigDecimal"))) {
-    			sqlTableColumns.append(", ").append(StringUtils.fromEntityPropertyNameToTableColumnName(field.getName()));
+    			sqlTableColumns.append(", ").append(EntityTableTransformUtils.fromEntityPropertyNameToTableColumnName(field.getName()));
     			sqlTableColumnValueWildcards.append(", ").append("?");
-    			insertArgs.add(clazz.getDeclaredMethod(StringUtils.fromEntityPropertyNameToGetMethodName(field.getName())).invoke(this.entity));
+    			insertArgs.add(clazz.getDeclaredMethod(EntityTableTransformUtils.fromEntityPropertyNameToGetMethodName(field.getName())).invoke(this.entity));
     		}
     	}
     	sqlTableColumns = sqlTableColumns.delete(0, 2);
     	sqlTableColumnValueWildcards = sqlTableColumnValueWildcards.delete(0, 2);
     	
-    	insertSQL = insertSQL.replace("{SQLTableName}", StringUtils.fromEntityNameToTableName(clazz.getSimpleName()));
+    	insertSQL = insertSQL.replace("{SQLTableName}", EntityTableTransformUtils.fromEntityNameToTableName(clazz.getSimpleName()));
     	insertSQL = insertSQL.replace("{SQLTableColumns}", sqlTableColumns);
     	insertSQL = insertSQL.replace("{SQLTableColumnValueWildcards}", sqlTableColumnValueWildcards);
     	this.insertSQL = insertSQL;
@@ -59,15 +59,15 @@ public class EntityPersistHelper<T> {
     	for (Field field: fields) {
     		if (field.getType().getModifiers() == 17 || (field.getType().getModifiers() == 1 && field.getType().getName().equals("java.math.BigDecimal"))) {
     			if (!field.getName().equals("id")) {
-    				SQLTableColumnsAndValueWildcards.append(", ").append(StringUtils.fromEntityPropertyNameToTableColumnName(field.getName())).append(" = ?");
-        			updateArgs.add(clazz.getDeclaredMethod(StringUtils.fromEntityPropertyNameToGetMethodName(field.getName())).invoke(this.entity));
+    				SQLTableColumnsAndValueWildcards.append(", ").append(EntityTableTransformUtils.fromEntityPropertyNameToTableColumnName(field.getName())).append(" = ?");
+        			updateArgs.add(clazz.getDeclaredMethod(EntityTableTransformUtils.fromEntityPropertyNameToGetMethodName(field.getName())).invoke(this.entity));
     			}
     		}
     	}
     	SQLTableColumnsAndValueWildcards = SQLTableColumnsAndValueWildcards.delete(0, 2);
-    	updateArgs.add(clazz.getDeclaredMethod(StringUtils.fromEntityPropertyNameToGetMethodName("id")).invoke(this.entity));
+    	updateArgs.add(clazz.getDeclaredMethod(EntityTableTransformUtils.fromEntityPropertyNameToGetMethodName("id")).invoke(this.entity));
     	
-    	updateSQL = updateSQL.replace("{SQLTableName}", StringUtils.fromEntityNameToTableName(clazz.getSimpleName()));
+    	updateSQL = updateSQL.replace("{SQLTableName}", EntityTableTransformUtils.fromEntityNameToTableName(clazz.getSimpleName()));
     	updateSQL = updateSQL.replace("{SQLTableColumnsAndValueWildcards}", SQLTableColumnsAndValueWildcards);
     	this.updateSQL = updateSQL;
     	this.updateArgs = updateArgs.toArray();
